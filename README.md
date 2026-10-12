@@ -1,6 +1,8 @@
 # ghqwatch
 
-ghq 管理下のリポジトリを定期チェックし、リモートより遅れている（behind）ものがあればトースト通知する Windows 用タスクトレイ常駐ツール。
+<img src="./icon.ico" alt="サーモン寿司" style="width:10%"></img>
+
+[ghq](https://github.com/x-motemen/ghq) 管理下のリポジトリを定期チェックし、リモートより遅れている（behind）ものがあればトースト通知する Windows 用タスクトレイ常駐ツール。
 
 ## 概要
 

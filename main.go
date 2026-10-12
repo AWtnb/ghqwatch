@@ -16,7 +16,13 @@ import (
 )
 
 //go:embed icon.ico
-var icon []byte
+var iconNormal []byte
+
+//go:embed icon-unchecked.ico
+var iconUnchecked []byte
+
+//go:embed icon-out-of-date.ico
+var iconOutOfDate []byte
 
 const (
 	interval   = 1 * time.Hour
@@ -55,7 +61,7 @@ func isBehind(path string) (bool, error) {
 	}
 	out, err := run(path, "git", "rev-list", "--count", "HEAD..@{u}")
 	if err != nil {
-		return false, nil // upstream 無し、detached HEAD など
+		return false, nil // no upstream, detached HEAD, etc.
 	}
 	return out != "0", nil
 }
@@ -135,7 +141,7 @@ func updateAll(paths []string) (ok int) {
 func main() { systray.Run(onReady, nil) }
 
 func onReady() {
-	systray.SetIcon(icon)
+	systray.SetIcon(iconUnchecked)
 	systray.SetTitle("ghqwatch")
 	systray.SetTooltip("ghqwatch")
 
@@ -163,6 +169,8 @@ func onReady() {
 		mCheck.Disable()
 		defer mCheck.Enable()
 
+		systray.SetIcon(iconUnchecked)
+
 		res, err := checkAll(func(d, t int) {
 			mStatus.SetTitle(fmt.Sprintf("Checking (%d/%d)", d, t))
 		})
@@ -179,12 +187,14 @@ func onReady() {
 			suffix = fmt.Sprintf(", %d failed", res.failed)
 		}
 		if len(res.behinds) == 0 {
+			systray.SetIcon(iconNormal)
 			mStatus.SetTitle(fmt.Sprintf("Up-to-date (%s%s)", now, suffix))
 			mUpdate.Hide()
 			systray.SetTooltip("ghqwatch: up-to-date" + suffix)
 			lastKey = ""
 			return 0 < res.failed
 		}
+		systray.SetIcon(iconOutOfDate)
 		mStatus.SetTitle(fmt.Sprintf("%d updates available (%s%s)", len(res.behinds), now, suffix))
 		mUpdate.SetTitle(fmt.Sprintf("Update %d", len(res.behinds)))
 		mUpdate.Show()

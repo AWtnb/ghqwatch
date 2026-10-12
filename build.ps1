@@ -35,8 +35,10 @@ if ($Unregister) {
 }
 
 # go:embed fails without icon.ico
-if (-not (Test-Path -Path "icon.ico" -PathType Leaf)) {
-    Write-Error "icon.ico not found."
+foreach ($f in "icon.ico", "icon-unchecked.ico", "icon-out-of-date.ico") {
+    if (-not (Test-Path -Path $f -PathType Leaf)) {
+        Write-Error "$f not found"
+    }
 }
 
 if (-not (Test-Path -Path "go.mod" -PathType Leaf)) {

@@ -13,26 +13,25 @@
 - 自動更新はしない。更新はメニューをクリックしたときだけ
 - オフライン起動時は「最新」と誤表示せずエラー表示し、3分おきに再試行
 
-## 必要なもの
+## 要件
 
 - Windows
 - Go 1.25 以上（`sync.WaitGroup.Go` を使用）
 - ghq, git（PATH が通っていること）
-- PowerShell 7 以降
-- `icon.ico`（`main.go` と同じフォルダ）
+- アイコン3種（`main.go` と同じフォルダ）
+	- `icon.ico` = 最新状態
+	- `icon-out-of-date.ico` =  behind あり
+	- `icon-unchecked.ico` = 未チェック / チェック中 / ERROR
 
-## セットアップ
 
-### icon.ico
-
-`go:embed` でビルド時に埋め込む。無いとビルドが失敗する。
+アイコンは `go:embed` でビルド時に埋め込む。無いとビルドが失敗する。
 PNG から作る場合:
 
 ```
 magick icon.png -define icon:auto-resize=256,128,64,48,32,24,16 icon.ico
 ```
 
-### ビルドと登録
+## ビルドと登録
 
 ```
 powershell -nop .\build.ps1

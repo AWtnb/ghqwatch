@@ -105,7 +105,7 @@ func checkAll(onProgress func(done, total int)) (result, error) {
 	sort.Strings(behinds)
 
 	res := result{behinds: behinds, failed: failed, total: len(repos)}
-	if len(repos) > 0 && failed == len(repos) {
+	if 0 < len(repos) && failed == len(repos) {
 		return res, errAllFailed
 	}
 	return res, nil
@@ -136,8 +136,8 @@ func main() { systray.Run(onReady, nil) }
 
 func onReady() {
 	systray.SetIcon(icon)
-	systray.SetTitle("ghq watcher")
-	systray.SetTooltip("ghq watcher")
+	systray.SetTitle("ghqwatch")
+	systray.SetTooltip("ghqwatch")
 
 	mStatus := systray.AddMenuItem("Unchecked", "")
 	mStatus.Disable()
@@ -169,32 +169,32 @@ func onReady() {
 		now := time.Now().Format("15:04")
 		if err != nil {
 			mStatus.SetTitle(fmt.Sprintf("ERROR (%s): %s", now, err))
-			systray.SetTooltip("ghq watcher: check failed")
+			systray.SetTooltip("ghqwatch: check failed")
 			return true
 		}
 
 		behinds = res.behinds
 		suffix := ""
-		if res.failed > 0 {
+		if 0 < res.failed {
 			suffix = fmt.Sprintf(", %d failed", res.failed)
 		}
 		if len(res.behinds) == 0 {
 			mStatus.SetTitle(fmt.Sprintf("Up-to-date (%s%s)", now, suffix))
 			mUpdate.Hide()
-			systray.SetTooltip("ghq watcher: up-to-date" + suffix)
+			systray.SetTooltip("ghqwatch: up-to-date" + suffix)
 			lastKey = ""
-			return res.failed > 0
+			return 0 < res.failed
 		}
 		mStatus.SetTitle(fmt.Sprintf("%d updates available (%s%s)", len(res.behinds), now, suffix))
 		mUpdate.SetTitle(fmt.Sprintf("Update %d", len(res.behinds)))
 		mUpdate.Show()
-		systray.SetTooltip(fmt.Sprintf("ghq watcher: %d updates available", len(res.behinds)))
+		systray.SetTooltip(fmt.Sprintf("ghqwatch: %d updates available", len(res.behinds)))
 
 		if key := strings.Join(res.behinds, "|"); key != lastKey {
 			lastKey = key
-			_ = beeep.Notify("ghq watcher", fmt.Sprintf("%d repositories have updates available", len(res.behinds)), "")
+			_ = beeep.Notify("ghqwatch", fmt.Sprintf("%d repositories have updates available", len(res.behinds)), "")
 		}
-		return res.failed > 0
+		return 0 < res.failed
 	}
 
 	update := func() {
@@ -205,11 +205,11 @@ func onReady() {
 		mStatus.SetTitle("Updating...")
 		ok := updateAll(targets)
 		busy.Unlock()
-		_ = beeep.Notify("ghq watcher", fmt.Sprintf("Updated %d/%d repositories", ok, len(targets)), "")
+		_ = beeep.Notify("ghqwatch", fmt.Sprintf("Updated %d/%d repositories", ok, len(targets)), "")
 		check()
 	}
 
-	// リトライが必要なら retryAfter 後に再試行、成功するまで繰り返す。
+	// If a retry is needed, retry after retryAfter and repeat until successful.
 	var retryTimer *time.Timer
 	var retryMu sync.Mutex
 	var runCheck func()

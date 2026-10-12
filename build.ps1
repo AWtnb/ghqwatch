@@ -47,7 +47,7 @@ go mod tidy
 # Cannot overwrite while running
 Stop-Running
 
-$ldflags = if ($Console) { "" } else { "-H=windowsgui -s -w" }
+$ldflags = if ($Console) { "" } else { "-H=windowsgui" }
 
 Write-Host "Building $exe ..."
 go build -ldflags $ldflags -o $exe .

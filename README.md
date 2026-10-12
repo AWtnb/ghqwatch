@@ -60,7 +60,7 @@ powershell -nop .\build.ps1
 手動ビルド:
 
 ```
-go build -ldflags "-H=windowsgui -s -w" -o ghqwatch.exe .
+go build -ldflags "-H=windowsgui" -o ghqwatch.exe .
 ```
 
 `-H=windowsgui` を付けないと、起動時に黒いコンソール窓が出る。
@@ -107,3 +107,4 @@ const (
 | exe を上書きできない | 起動中。トレイの Quit か、`build.ps1` に停止させる |
 | 通知が出ない | Windows の集中モード、通知設定を確認 |
 | エラー詳細を見たい | `.\build.ps1 -Console` でビルドし、ターミナルから起動 |
+| Defender が `Trojan:Script/Conteban.A!ml` と誤検知する | 未署名 Go exe の ML 誤検知。フォルダを除外、または Microsoft に誤検知報告 |

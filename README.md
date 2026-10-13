@@ -1,6 +1,8 @@
 # ghqwatch
 
-<img src="./icon.ico" alt="サーモン寿司" style="width:10%"></img>
+<img src="./icon.ico" alt="up-to-date" style="width:10%"></img>
+<img src="./icon-unchecked.ico" alt="unchecked" style="width:10%"></img>
+<img src="./icon-out-of-date.ico" alt="behind" style="width:10%"></img>
 
 [ghq](https://github.com/x-motemen/ghq) 管理下のリポジトリを定期チェックし、リモートより遅れている（behind）ものがあればトースト通知する Windows 用タスクトレイ常駐ツール。
 
@@ -23,13 +25,13 @@
 	- `icon-out-of-date.ico` =  behind あり
 	- `icon-unchecked.ico` = 未チェック / チェック中 / ERROR
 
-
-アイコンは `go:embed` でビルド時に埋め込む。無いとビルドが失敗する。
-PNG から作る場合:
-
-```
-magick icon.png -define icon:auto-resize=256,128,64,48,32,24,16 icon.ico
-```
+> [!NOTE]
+> アイコンは `go:embed` でビルド時に埋め込む。無いとビルドが失敗する。
+> PNG から作る場合:
+> 
+> ```
+> magick icon.png -define icon:auto-resize=256,128,64,48,32,24,16 icon.ico
+> ```
 
 ## ビルドと登録
 
@@ -37,7 +39,7 @@ magick icon.png -define icon:auto-resize=256,128,64,48,32,24,16 icon.ico
 powershell -nop .\build.ps1
 ```
 
-ビルド → スタートアップに exe をコピー → 起動、まで一括で行う。次回ログオンから自動起動。
+`go install` で GOBIN(未設定なら `%GOPATH%\bin`、通常 `%USERPROFILE%\go\bin`)に exe を配置し、スタートアップにショートカットを作って起動する。次回ログオンから自動起動。
 
 | オプション | 内容 |
 | --- | --- |
@@ -48,13 +50,18 @@ powershell -nop .\build.ps1
 
 `build.ps1` がやること:
 
-1. `go.mod` が無ければ `go mod init`、続けて `go mod tidy`
-2. 起動中の同名プロセスを停止
-3. `-H=windowsgui` 付きでビルド
-4. `shell:startup` に exe をコピーして起動
+1. アイコン3種の存在確認
+2. `go.mod` が無ければ `go mod init`、続けて `go mod tidy`
+3. 起動中の同名プロセスを停止
+4. `go install -ldflags "-H=windowsgui"`
+5. `shell:startup` に `.lnk` を作成して起動
 
-コピー方式なので、更新したいときは `.\build.ps1` をもう一度実行する。
+ショートカットは GOBIN の exe を参照するので、更新時は `.\build.ps1` を再実行するだけ。
 有効/無効の切り替えはタスクマネージャーの「スタートアップ アプリ」。
+
+> [!WARNING]
+> - `go install` の出力名はモジュール名で決まる。`-o` は使えない
+> - `-Console` で入れた exe はショートカットの参照先と同じ。次回ログオンで黒窓付きで起動するので、通常の `.\build.ps1` で戻す
 
 手動ビルド:
 

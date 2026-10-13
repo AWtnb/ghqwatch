@@ -1,9 +1,9 @@
 [CmdletBinding()]
 param(
-    [string]$Name = "ghqwatch",
-    [switch]$Console,      # Build with a console (do not register or start)
-    [switch]$NoRegister,   # Build only. Do not register to startup
-    [switch]$Unregister    # Remove from startup (do not build)
+    [string]$Name = "ghqwatch",   # match the module name in go.mod
+    [switch]$Console,             # build with console enabled (do not register or launch)
+    [switch]$NoRegister,          # install only; do not register on startup
+    [switch]$Unregister           # remove the startup shortcut (do not build)
 )
 
 $ErrorActionPreference = "Stop"
@@ -11,7 +11,11 @@ Set-Location -Path $PSScriptRoot
 
 $exe     = "$Name.exe"
 $startup = [Environment]::GetFolderPath("Startup")
-$dest    = Join-Path $startup $exe
+$lnk     = Join-Path $startup "$Name.lnk"
+
+$bin = go env GOBIN
+if (-not $bin) { $bin = Join-Path (go env GOPATH) "bin" }
+$installed = Join-Path $bin $exe
 
 function Stop-Running {
     Get-Process -Name $Name -ErrorAction SilentlyContinue | ForEach-Object {
@@ -21,23 +25,23 @@ function Stop-Running {
     }
 }
 
-# Unregister only
+# unregister only
 if ($Unregister) {
     Stop-Running
-    if (Test-Path -Path $dest -PathType Leaf) {
-        Remove-Item -Path $dest -Force
-        Write-Host "Removed: $dest" -ForegroundColor Green
+    if (Test-Path -Path $lnk -PathType Leaf) {
+        Remove-Item -Path $lnk -Force
+        Write-Host "Removed: $lnk" -ForegroundColor Green
     }
     else {
-        Write-Host "Not registered: $dest"
+        Write-Host "Not registered: $lnk"
     }
     return
 }
 
-# go:embed fails without icon.ico
+# build fails if there are no go:embed targets
 foreach ($f in "icon.ico", "icon-unchecked.ico", "icon-out-of-date.ico") {
     if (-not (Test-Path -Path $f -PathType Leaf)) {
-        Write-Error "$f not found"
+        Write-Error "$f was not found."
     }
 }
 
@@ -46,24 +50,30 @@ if (-not (Test-Path -Path "go.mod" -PathType Leaf)) {
 }
 go mod tidy
 
-# Cannot overwrite while running
+# cannot overwrite while running
 Stop-Running
 
+# do not include -s -w because they tend to trigger false positives
 $ldflags = if ($Console) { "" } else { "-H=windowsgui" }
 
-Write-Host "Building $exe ..."
-go build -ldflags $ldflags -o $exe .
+Write-Host "Installing $exe ..."
+go install -ldflags $ldflags .
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "go build failed (exit code $LASTEXITCODE)"
+    Write-Error "go install failed (exit code $LASTEXITCODE)"
     exit $LASTEXITCODE
 }
-Write-Host "Built: $(Join-Path $PSScriptRoot $exe)" -ForegroundColor Green
+Write-Host "Installed: $installed" -ForegroundColor Green
 
-# Do not register if build only or if this is a debug build
+# do not register if installing only or if building the console version
 if ($NoRegister -or $Console) {
     return
 }
 
-Copy-Item -Path (Join-Path $PSScriptRoot $exe) -Destination $dest -Force
-Write-Host "Registered: $dest" -ForegroundColor Green
-Start-Process -FilePath $dest
+$ws = New-Object -ComObject WScript.Shell
+$sc = $ws.CreateShortcut($lnk)
+$sc.TargetPath       = $installed
+$sc.WorkingDirectory = $bin
+$sc.Save()
+Write-Host "Registered: $lnk" -ForegroundColor Green
+
+Start-Process -FilePath $installed

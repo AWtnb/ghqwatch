@@ -96,7 +96,7 @@ go build -ldflags "-H=windowsgui" -o ghqwatch.exe .
 
 ```go
 const (
-	interval   = 1 * time.Hour   // 定期チェック間隔
+	interval   = 12 * time.Hour   // 定期チェック間隔
 	retryAfter = 3 * time.Minute // 失敗時の再試行間隔
 	workers    = 4               // 並列数
 )

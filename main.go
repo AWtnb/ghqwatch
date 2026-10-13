@@ -25,7 +25,7 @@ var iconUnchecked []byte
 var iconOutOfDate []byte
 
 const (
-	interval   = 1 * time.Hour
+	interval   = 12 * time.Hour
 	retryAfter = 3 * time.Minute
 	workers    = 4
 )

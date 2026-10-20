@@ -114,3 +114,4 @@ const (
 | 通知が出ない | Windows の集中モード、通知設定を確認 |
 | エラー詳細を見たい | `.\build.ps1 -Console` でビルドし、ターミナルから起動 |
 | Defender が `Trojan:Script/Conteban.A!ml` と誤検知する | 未署名 Go exe の ML 誤検知。フォルダを除外、または Microsoft に誤検知報告 |
+| 通知が見切れる | `go run ./notifytest` でダミー通知を出せるので調整する |

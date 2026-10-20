@@ -56,13 +56,17 @@ func listRepos() ([]string, error) {
 	return repos, nil
 }
 
-func formatBehindNames(behinds []string) string {
-	var names []string
+const maxNotifyNames = 3
+
+func joinFileNames(behinds []string, sep string) string {
+	names := make([]string, 0, len(behinds))
 	for _, p := range behinds {
-		n := filepath.Base(p)
-		names = append(names, n)
+		names = append(names, filepath.Base(p))
 	}
-	return strings.Join(names, ", ")
+	if len(names) <= maxNotifyNames {
+		return strings.Join(names, sep)
+	}
+	return strings.Join(names[:maxNotifyNames], sep) + fmt.Sprintf(" (+%d)", len(names)-maxNotifyNames)
 }
 
 func isBehind(path string) (bool, error) {
@@ -209,12 +213,11 @@ func onReady() {
 		mUpdate.SetTitle(fmt.Sprintf("Update %d", len(res.behinds)))
 		mUpdate.Show()
 
-		bns := formatBehindNames(res.behinds)
-		systray.SetTooltip(fmt.Sprintf("ghqwatch: %d updates available (%s)", len(res.behinds), bns))
+		systray.SetTooltip(fmt.Sprintf("ghqwatch: %d updates available (%s)", len(res.behinds), joinFileNames(res.behinds, ", ")))
 
 		if key := strings.Join(res.behinds, "|"); key != lastKey {
 			lastKey = key
-			_ = beeep.Notify("ghqwatch", fmt.Sprintf("%d repositories have updates available (%s)", len(res.behinds), bns), "")
+			_ = beeep.Notify("ghqwatch", fmt.Sprintf("%d repositories have updates available:\n%s", len(res.behinds), joinFileNames(res.behinds, "\n")), "")
 		}
 		return 0 < res.failed
 	}
